@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <title>食安毒油即時查詢外掛</title>
+  <link rel="stylesheet" href="popup.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+  <div class="header">
+    <i class="fa-solid fa-shield-virus header-icon"></i>
+    <span class="header-title">食安毒油即時查詢</span>
+  </div>
+
+  <div class="search-box">
+    <input type="text" id="ext-search-input" placeholder="輸入品名、品牌或條碼號..." />
+    <button id="ext-search-btn"><i class="fa-solid fa-magnifying-glass"></i></button>
+  </div>
+
+  <div class="ai-section">
+    <input type="file" id="ext-file-input" accept="image/*" style="display: none;">
+    <button class="ai-upload-btn" id="ext-ai-btn">
+      <i class="fa-solid fa-camera"></i> 上傳包裝照片 AI 自動辨識比對
+    </button>
+  </div>
+
+  <div id="ext-loading" class="loading" style="display: none;">
+    <i class="fa-solid fa-circle-notch fa-spin"></i> 正在連線後端查詢...
+  </div>
+
+  <div id="ext-status-banner" class="status-banner" style="display: none;"></div>
+
+  <div id="ext-results-list" class="results-list"></div>
+
+  <div class="footer">
+    <a href="http://localhost:3000" target="_blank" class="footer-link">
+      <i class="fa-solid fa-arrow-up-right-from-square"></i> 開啟完整 Web 版查詢系統
+    </a>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

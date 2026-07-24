@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>食安毒油事件即時查詢與辨識系統 | Food Safety Real-time Query & AI Scanner</title>
+  
+  <!-- Google Fonts & FontAwesome Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- PWA & iOS App Support -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="食安即時查">
+  <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/1041/1041888.png">
+  <link rel="manifest" href="manifest.webmanifest">
+  
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- Navbar Header -->
+  <nav class="navbar">
+    <div class="brand">
+      <i class="fa-solid fa-shield-virus brand-icon"></i>
+      <span class="brand-title">食安毒油即時查詢與辨識系統</span>
+    </div>
+    <div class="nav-actions">
+      <button class="btn-sync-header" id="btn-manual-sync" onclick="triggerManualSync()">
+        <i class="fa-solid fa-arrows-rotate"></i> 手動點擊更新資料庫
+      </button>
+      <div class="live-badge" id="scraper-status-badge">
+        <span class="pulse-dot"></span>
+        <span id="badge-text">每日 15:23 自動更新</span>
+      </div>
+      <!-- 右上角 3-dot 更多功能選單 (vdots) -->
+      <div class="dropdown-menu-container">
+        <button class="icon-btn-dots" id="btn-vdots-menu" onclick="toggleDropdownMenu(event)" title="更多選項">
+          <i class="fa-solid fa-ellipsis-vertical"></i>
+        </button>
+        <div class="dropdown-menu-box" id="dropdown-menu">
+          <div class="dropdown-item" onclick="triggerPwaInstall()"><i class="fa-solid fa-mobile-screen-button" style="color: var(--accent-cyan);"></i> 安裝 APP 至手機主畫面</div>
+          <div class="dropdown-item" onclick="triggerManualSync()"><i class="fa-solid fa-arrows-rotate" style="color: var(--safe-green);"></i> 手動點擊更新資料庫</div>
+          <div class="dropdown-item" onclick="switchTab('admin-tab')"><i class="fa-solid fa-sliders" style="color: var(--warning-amber);"></i> 後端資料庫與爬蟲設定</div>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container">
+    
+    <!-- Hero Header (簡潔版) -->
+    <header class="hero-section" style="margin-bottom: 1.2rem; padding: 0.5rem 0;">
+      <h1 class="hero-title" style="font-size: 1.8rem;">毒油與下架食品即時防護網</h1>
+      <p class="hero-subtitle" style="font-size: 0.95rem;">衛福部 TFDA 官方下架資料庫即時同步 ‧ Gemini 視覺 AI 包裝自動辨識</p>
+    </header>
+
+    <!-- Navigation Tabs (置頂) -->
+    <div class="tabs-header">
+      <button class="tab-btn active" onclick="switchTab('search-tab')">
+        <i class="fa-solid fa-magnifying-glass"></i> 即時關鍵字/條碼查詢
+      </button>
+      <button class="tab-btn" onclick="switchTab('ai-tab')">
+        <i class="fa-solid fa-camera"></i> Gemini AI 視覺照片辨識
+      </button>
+      <button class="tab-btn" onclick="switchTab('admin-tab')">
+        <i class="fa-solid fa-sliders"></i> 後端資料庫與爬蟲設定
+      </button>
+    </div>
+
+    <!-- TAB 1: 關鍵字/條碼查詢介面 (進來即見搜尋) -->
+    <main id="search-tab" class="tab-content">
+      <div class="search-card">
+        <div class="search-input-group">
+          <input type="text" id="search-input" class="search-input" placeholder="輸入產品名稱、店家/業者、品牌或條碼（如：飯糰、7-11、好樂迪、全聯...）" oninput="handleSearchInput()">
+          <button class="btn-primary" onclick="performSearch()">
+            <i class="fa-solid fa-magnifying-glass"></i> 搜尋
+          </button>
+        </div>
+        <div class="filter-tags">
+          <span class="filter-tag active" onclick="filterStatus('', this)">全部品項</span>
+          <span class="filter-tag" onclick="filterStatus('recalled', this)"><i class="fa-solid fa-ban"></i> 僅顯示下架商品</span>
+          <span class="filter-tag" onclick="filterStatus('warning', this)"><i class="fa-solid fa-triangle-exclamation"></i> 僅顯示疑慮警示</span>
+          <span class="filter-tag" onclick="filterStatus('safe', this)"><i class="fa-solid fa-circle-check"></i> 安全合格商品</span>
+        </div>
+      </div>
+
+      <!-- 免責與查詢說明 (緊湊雙欄版) -->
+      <section class="disclaimer-card compact">
+        <div class="disclaimer-header">
+          <i class="fa-solid fa-circle-info disclaimer-icon"></i>
+          <h2 class="disclaimer-title">【免責與查詢說明】</h2>
+        </div>
+        <div class="disclaimer-grid compact-grid">
+          <div class="disclaimer-item">
+            <div class="disclaimer-tag">📌 資料來源與範圍</div>
+            <div class="disclaimer-text">同步自 TFDA 與各地衛生局公告。官方目前以「受影響店家/業者」為主，建議拍攝發票或店家招牌比對。</div>
+          </div>
+          <div class="disclaimer-item">
+            <div class="disclaimer-tag">⚖️ 權益與更新提示</div>
+            <div class="disclaimer-text">結果僅供參考，退換貨請依官方為準。系統於 <strong>每日 15:23 自動更新</strong>，亦可點右上角手動更新。</div>
+          </div>
+        </div>
+      </section>
+
+      <div class="results-meta-bar">
+        <span id="results-count-badge" class="meta-badge"><i class="fa-solid fa-list-check"></i> 預設列出 10 項品項（輸入關鍵字可搜尋全庫 3,688 筆）</span>
+      </div>
+
+      <!-- Products Grid -->
+      <div class="products-grid" id="products-container">
+        <!-- JS 動態渲染產品卡片 -->
+      </div>
+    </main>
+
+    <!-- TAB 2: AI 視覺照片辨識 -->
+    <main id="ai-tab" class="tab-content" style="display: none;">
+      <div class="ai-card">
+        <h2 style="margin-bottom: 0.5rem;"><i class="fa-solid fa-wand-magic-sparkles" style="color: var(--accent-cyan);"></i> Gemini 智慧包裝辨識器</h2>
+        <p style="color: var(--text-muted); margin-bottom: 1.5rem;">拍攝或上傳商品外包裝照片，AI 將自動辨識品名、品牌與條碼，並即時在後端毒油清單進行安全比對。</p>
+        
+        <div class="camera-box" onclick="triggerFileInput()" id="drop-zone">
+          <i class="fa-solid fa-cloud-arrow-up camera-icon"></i>
+          <h3 style="margin-bottom: 0.5rem;">點擊上傳或將外包裝照片拖曳至此</h3>
+          <p style="color: var(--text-muted); font-size: 0.9rem;">支援 JPG, PNG, WEBP 格式（最大 10MB）</p>
+          <input type="file" id="file-input" accept="image/*" style="display: none;" onchange="handleFileSelect(event)">
+        </div>
+
+        <div style="display: flex; gap: 10px; justify-content: center; margin-top: 1rem;">
+          <button class="btn-primary" onclick="startCamera()"><i class="fa-solid fa-video"></i> 開啟相機即時拍照</button>
+          <button class="btn-primary" id="btn-capture" style="display:none; background: var(--safe-green);" onclick="captureCamera()"><i class="fa-solid fa-camera"></i> 拍照送出辨識</button>
+        </div>
+
+        <!-- 相機串流與預覽 -->
+        <video id="camera-stream" autoplay playsinline></video>
+        <img id="image-preview" alt="照片預覽">
+
+        <!-- 辨識中 Loading -->
+        <div id="ai-loading" style="display: none; text-align: center; margin: 1.5rem 0;">
+          <i class="fa-solid fa-circle-notch fa-spin" style="font-size: 2.5rem; color: var(--accent-cyan);"></i>
+          <p style="margin-top: 0.8rem;">Gemini AI 視覺神經網路辨識中，請稍候...</p>
+        </div>
+
+        <!-- AI 辨識評估結果 -->
+        <div id="assessment-banner" class="assessment-banner">
+          <h3 id="assessment-title" style="margin-bottom: 0.4rem;"></h3>
+          <p id="assessment-msg"></p>
+          <div id="ai-product-info" style="margin-top: 10px; font-size: 0.9rem; opacity: 0.9;"></div>
+        </div>
+
+        <!-- 匹配結果卡片 -->
+        <div id="ai-match-container" class="products-grid" style="margin-top: 1.5rem;"></div>
+      </div>
+    </main>
+
+    <!-- TAB 3: 後端與爬蟲管理 -->
+    <main id="admin-tab" class="tab-content" style="display: none;">
+      <div class="ai-card">
+        <h2><i class="fa-solid fa-gears" style="color: var(--accent-blue);"></i> 系統後端與爬蟲維護控制台</h2>
+        <p style="color: var(--text-muted); margin-bottom: 1.5rem;">設定 TFDA 食藥署自動定時爬蟲排程，或手動增刪食安下架資料條目。</p>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem;">
+          <!-- 爬蟲開關設定 Card -->
+          <div style="background: rgba(11, 15, 25, 0.6); padding: 1.5rem; border-radius: var(--radius-md); border: 1px solid var(--border-glass);">
+            <h3 style="margin-bottom: 1rem;"><i class="fa-solid fa-robot"></i> 自動爬蟲 (Cron Job) 控制</h3>
+            <div style="margin-bottom: 1rem;">
+              <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                <input type="checkbox" id="auto-scraper-switch" onchange="toggleAutoScraper()" style="width: 20px; height: 20px;">
+                <span>啟用定期自動網頁爬蟲更新</span>
+              </label>
+            </div>
+            <div style="margin-bottom: 1rem;">
+              <label style="display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 4px;">Cron 排程表達式</label>
+              <input type="text" id="cron-input" class="search-input" value="0 0 * * *" style="padding: 8px 12px; font-size: 0.95rem;">
+            </div>
+            <div style="margin-bottom: 1rem;">
+              <label style="display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 4px;">Gemini API Key (用於視覺辨識)</label>
+              <input type="password" id="gemini-key-input" class="search-input" placeholder="AIzaSy..." style="padding: 8px 12px; font-size: 0.95rem;">
+            </div>
+            <div style="display: flex; gap: 10px;">
+              <button class="btn-primary" onclick="saveAdminSettings()"><i class="fa-solid fa-floppy-disk"></i> 儲存系統設定</button>
+              <button class="btn-primary" style="background: var(--warning-amber);" onclick="triggerManualScraper()"><i class="fa-solid fa-arrows-rotate"></i> 立即執行爬蟲</button>
+            </div>
+            <p style="font-size: 0.82rem; color: var(--text-muted); margin-top: 10px;">最後爬蟲時間：<span id="last-scraped-time">讀取中...</span></p>
+          </div>
+
+          <!-- 手動新增資料條目 Card -->
+          <div style="background: rgba(11, 15, 25, 0.6); padding: 1.5rem; border-radius: var(--radius-md); border: 1px solid var(--border-glass);">
+            <h3 style="margin-bottom: 1rem;"><i class="fa-solid fa-newspaper"></i> 貼上新聞網址/內文 AI 自動解析</h3>
+            <div style="margin-bottom: 10px;">
+              <input type="text" id="news-url-input" class="search-input" placeholder="貼上新聞網址 (如: https://www.storm.mg/lifestyle/...)" style="padding: 8px 12px; font-size: 0.9rem; margin-bottom: 8px;">
+              <textarea id="news-text-input" class="search-input" placeholder="或直接貼上新聞報導內文..." style="padding: 8px 12px; font-size: 0.9rem; height: 75px; margin-bottom: 8px;"></textarea>
+              <button class="btn-primary" style="width: 100%; background: linear-gradient(135deg, #00f2fe, #4facfe); color: #0b0f19;" onclick="handleParseNewsUrl()"><i class="fa-solid fa-wand-magic-sparkles"></i> 自動抓取新聞並寫入資料庫</button>
+            </div>
+            <p style="font-size: 0.8rem; color: var(--text-muted);">系統會自動讀取新聞，提取文中所有被點名的下架商品與超商鮮食寫入資料庫。</p>
+          </div>
+
+          <!-- 手動新增資料條目 Card -->
+          <div style="background: rgba(11, 15, 25, 0.6); padding: 1.5rem; border-radius: var(--radius-md); border: 1px solid var(--border-glass);">
+            <h3 style="margin-bottom: 1rem;"><i class="fa-solid fa-plus-circle"></i> 手動新增單筆條目</h3>
+            <form id="add-product-form" onsubmit="handleManualAddProduct(event)">
+              <input type="text" id="add-name" class="search-input" placeholder="商品全名 (必填)" required style="margin-bottom: 8px; padding: 8px 12px;">
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px;">
+                <input type="text" id="add-brand" class="search-input" placeholder="品牌" style="padding: 8px 12px;">
+                <input type="text" id="add-manufacturer" class="search-input" placeholder="製造廠商" style="padding: 8px 12px;">
+              </div>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px;">
+                <input type="text" id="add-barcode" class="search-input" placeholder="條碼 (EAN)" style="padding: 8px 12px;">
+                <select id="add-status" class="search-input" style="padding: 8px 12px; color: #fff;">
+                  <option value="recalled" selected>下架回收 (Recalled)</option>
+                  <option value="warning">疑慮預警 (Warning)</option>
+                  <option value="safe">安全合格 (Safe)</option>
+                </select>
+              </div>
+              <textarea id="add-reason" class="search-input" placeholder="下架原因說明" style="margin-bottom: 8px; padding: 8px 12px; height: 60px;"></textarea>
+              <textarea id="add-return-info" class="search-input" placeholder="退換貨服務管道與聯絡電話" style="margin-bottom: 8px; padding: 8px 12px; height: 60px;"></textarea>
+              <button type="submit" class="btn-primary" style="width: 100%; background: var(--safe-green);"><i class="fa-solid fa-check"></i> 新增至資料庫</button>
+            </form>
+          </div>
+        </div>
+
+        <!-- 爬蟲日誌 Table -->
+        <h3 style="margin-top: 2rem; margin-bottom: 0.5rem;"><i class="fa-solid fa-clock-rotate-left"></i> 爬蟲執行歷史紀錄</h3>
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>狀態</th>
+              <th>執行結果與訊息</th>
+              <th>新增筆數</th>
+              <th>時間</th>
+            </tr>
+          </thead>
+          <tbody id="logs-tbody">
+            <!-- JS 動態寫入 log -->
+          </tbody>
+        </table>
+      </div>
+    </main>
+
+  </div>
+
+  <!-- 商品詳細與退換貨 Modal -->
+  <div id="product-modal" class="modal-overlay">
+    <div class="modal-content">
+      <button class="modal-close" onclick="closeModal()">&times;</button>
+      <div id="modal-badge-container" style="margin-bottom: 10px;"></div>
+      <h2 id="modal-title" style="margin-bottom: 0.5rem; color: #fff;"></h2>
+      
+      <div style="background: rgba(11, 15, 25, 0.7); padding: 1rem; border-radius: var(--radius-md); margin-bottom: 1rem; border: 1px solid var(--border-glass);">
+        <p style="margin-bottom: 4px;"><strong>品牌：</strong> <span id="modal-brand"></span></p>
+        <p style="margin-bottom: 4px;"><strong>製造廠商：</strong> <span id="modal-manufacturer"></span></p>
+        <p style="margin-bottom: 4px;"><strong>國際條碼：</strong> <span id="modal-barcode"></span></p>
+        <p style="margin-bottom: 4px;"><strong>受影響批號：</strong> <span id="modal-batch"></span></p>
+        <p style="margin-bottom: 4px;"><strong>公告日期：</strong> <span id="modal-date"></span></p>
+      </div>
+
+      <h3 style="color: var(--danger-red); margin-bottom: 0.4rem;"><i class="fa-solid fa-triangle-exclamation"></i> 下架與違規原因：</h3>
+      <p id="modal-reason" style="margin-bottom: 1.2rem; color: #e2e8f0; line-height: 1.5;"></p>
+
+      <h3 style="color: var(--accent-cyan); margin-bottom: 0.4rem;"><i class="fa-solid fa-hand-holding-dollar"></i> 退換貨補償指示與處理管道：</h3>
+      <div style="background: rgba(0, 242, 254, 0.08); padding: 1rem; border-radius: var(--radius-md); border: 1px solid rgba(0, 242, 254, 0.3); margin-bottom: 1.2rem;">
+        <p id="modal-return-info" style="color: #fff; line-height: 1.5;"></p>
+      </div>
+
+      <div style="display: flex; gap: 10px; justify-content: flex-end;">
+        <a id="modal-official-link" href="#" target="_blank" class="btn-primary" style="background: rgba(255,255,255,0.1); color: #fff; text-decoration: none; display: inline-flex; align-items: center; gap: 6px;">
+          <i class="fa-solid fa-arrow-up-right-from-square"></i> 查閱食藥署官方公告
+        </a>
+        <button class="btn-primary" onclick="closeModal()">關閉視窗</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

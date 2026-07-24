@@ -1,0 +1,22 @@
+{
+  "name": "food-safety-toxic-oil-system",
+  "version": "1.0.0",
+  "description": "食安毒油事件即時查詢與辨識系統 (Backend, Web Scraper, Web App, Chrome Extension, Gemini AI Vision)",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js",
+    "seed": "node seed_data.js"
+  },
+  "dependencies": {
+    "axios": "^1.7.9",
+    "cheerio": "^1.0.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "multer": "^1.4.5-lts.1",
+    "node-cron": "^3.0.3",
+    "pdf-parse": "^2.4.5",
+    "pdfjs-dist": "^6.1.200"
+  }
+}
