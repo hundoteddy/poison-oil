@@ -26,15 +26,18 @@
   <nav class="navbar">
     <div class="brand">
       <i class="fa-solid fa-shield-virus brand-icon"></i>
-      <span class="brand-title">食安毒油即時查詢與辨識系統</span>
+      <span class="brand-title">
+        <span class="brand-text-full">食安毒油即時查詢與辨識系統</span>
+        <span class="brand-text-short">食安即時查</span>
+      </span>
     </div>
     <div class="nav-actions">
       <button class="btn-sync-header" id="btn-manual-sync" onclick="triggerManualSync()">
-        <i class="fa-solid fa-arrows-rotate"></i> 手動點擊更新資料庫
+        <i class="fa-solid fa-arrows-rotate"></i> <span class="sync-btn-label">手動點擊更新資料庫</span>
       </button>
       <div class="live-badge" id="scraper-status-badge">
         <span class="pulse-dot"></span>
-        <span id="badge-text">每日 15:23 自動更新</span>
+        <span id="badge-text"><span class="badge-full">每日 15:23 自動更新</span><span class="badge-short">15:23 更新</span></span>
       </div>
       <!-- 右上角 3-dot 更多功能選單 (vdots) -->
       <div class="dropdown-menu-container">

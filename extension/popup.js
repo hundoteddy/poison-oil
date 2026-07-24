@@ -1,4 +1,5 @@
-const API_BASE = 'http://localhost:3000/api';
+const VERCEL_API = 'https://poison-oil.vercel.app/api';
+const LOCAL_API = 'http://localhost:3000/api';
 
 document.addEventListener('DOMContentLoaded', () => {
   const searchInput = document.getElementById('ext-search-input');
@@ -28,7 +29,12 @@ async function search(query) {
   resultsList.innerHTML = '';
 
   try {
-    const res = await fetch(`${API_BASE}/products?q=${encodeURIComponent(query)}`);
+    let res;
+    try {
+      res = await fetch(`${VERCEL_API}/products?q=${encodeURIComponent(query)}`);
+    } catch (netErr) {
+      res = await fetch(`${LOCAL_API}/products?q=${encodeURIComponent(query)}`);
+    }
     const data = await res.json();
     loading.style.display = 'none';
 
@@ -37,7 +43,7 @@ async function search(query) {
     }
   } catch (err) {
     loading.style.display = 'none';
-    resultsList.innerHTML = `<div style="color: #ff4b5c; font-size: 0.85rem;">無法連線後端伺服器 (http://localhost:3000)。請確認伺服器已啟動。</div>`;
+    resultsList.innerHTML = `<div style="color: #ff4b5c; font-size: 0.85rem; padding: 0.5rem; text-align: center;">伺服器連線中...請稍後重試。</div>`;
   }
 }
 
@@ -58,11 +64,20 @@ function handleImageUpload(e) {
     resultsList.innerHTML = '';
 
     try {
-      const res = await fetch(`${API_BASE}/recognize`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ image_base64: base64 })
-      });
+      let res;
+      try {
+        res = await fetch(`${VERCEL_API}/recognize`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ image_base64: base64 })
+        });
+      } catch (err1) {
+        res = await fetch(`${LOCAL_API}/recognize`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ image_base64: base64 })
+        });
+      }
 
       const result = await res.json();
       loading.style.display = 'none';

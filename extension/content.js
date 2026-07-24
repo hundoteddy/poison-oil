@@ -3,7 +3,8 @@
 (function() {
   console.log('🛡️ 食安毒油即時查詢 Content Script 啟動');
 
-  const API_BASE = 'http://localhost:3000/api';
+  const API_BASE = 'https://poison-oil.vercel.app/api';
+  const LOCAL_API = 'http://localhost:3000/api';
 
   // 延遲執行抓取頁面商品標題
   setTimeout(() => {
@@ -80,7 +81,7 @@
         </div>
       </div>
       <div style="display: flex; gap: 10px; align-items: center;">
-        <a href="http://localhost:3000" target="_blank" style="background: #ffffff; color: #d90429; padding: 4px 12px; border-radius: 4px; text-decoration: none; font-size: 13px;">查看退換貨詳情</a>
+        <a href="https://poison-oil.vercel.app" target="_blank" style="background: #ffffff; color: #d90429; padding: 4px 12px; border-radius: 4px; text-decoration: none; font-size: 13px;">查看退換貨詳情</a>
         <button onclick="document.getElementById('food-safety-warning-banner').remove()" style="background: none; border: none; color: #fff; font-size: 18px; cursor: pointer;">&times;</button>
       </div>
     `;

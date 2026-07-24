@@ -8,6 +8,7 @@
     "storage"
   ],
   "host_permissions": [
+    "https://poison-oil.vercel.app/*",
     "http://localhost:3000/*"
   ],
   "action": {
@@ -24,6 +25,7 @@
         "https://*.pchome.com.tw/*",
         "https://*.shopee.tw/*",
         "https://*.carrefour.com.tw/*",
+        "https://poison-oil.vercel.app/*",
         "http://localhost:3000/*"
       ],
       "js": ["content.js"]
